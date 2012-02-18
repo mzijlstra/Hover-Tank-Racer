@@ -2,21 +2,22 @@
 
 //==============================================================================
 /* System functions */
-Tank::Tank(Map* map, int x, int y) {
+Tank::Tank(Map* map, GLuint texture, int x, int y) {
 	this->map = map;
+	this->texture = texture;
 	w = h = 32;
 	this->x = x;
 	this->y = y;
-	z = 5;
+	z = 15;
 
 	xRot = yRot = 0;
 	zRot = 0; // face north
 
 	xVel = yVel = zVel = zRotVel = 0; // not moving
 
-	forwardFrc = 1.0;
-	breakFrc = 0.5;
-	strafeFrc = 0.5;
+	forwardFrc = 0.25;
+	breakFrc = 0.25;
+	strafeFrc = 0.25;
 	turnFrc = 0.1;
 
 	gunRot = 0;
@@ -27,28 +28,128 @@ Tank::Tank(Map* map, int x, int y) {
 	gunPowChgSpd = 1.0;
 }
 
+Tank::~Tank() {
+	glDeleteTextures(1, &texture);
+}
+
 //------------------------------------------------------------------------------
-void Tank::display(float xView, float yView) {
-	glColor3f(0.0, 0.0, 1.0);
+void Tank::display() {
 
 	glPushMatrix();
 
-	glTranslatef(x - xView, y - yView, z);
+	glTranslatef(x, y, z);
+
+    // first draw the velocity arrow
+    float curVel   = sqrt(pow(yVel, 2) + pow(xVel, 2));
+	if (curVel > 1.5) {
+		glDisable(GL_TEXTURE_2D);
+		glPushMatrix();
+
+		// enable line smoothing
+		glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
+		glEnable(GL_LINE_SMOOTH);
+
+		float velAngle = TODEG(atan(yVel / xVel));
+		if (xVel < 0) {
+			velAngle += 180;
+		}
+
+		glRotatef(velAngle, 0.0, 0.0, 1.0);
+		glBegin(GL_LINES);
+		float opacity = 1;
+
+		glColor4f(1.0, 0.5, 0.0, opacity);
+		glVertex3f(25, 0, 0);
+		glColor4f(1.0, 0.0, 0.0, opacity);
+		glVertex3f(25 + curVel* 3, 0, 0);
+
+		/*	for (float i=1; i <= curVel / 5; i++) {
+			opacity = 0.75 / i;
+
+			glColor4f(1.0, 0.5, 0.0, opacity);
+			glVertex3f(25, i, 0);
+			glColor4f(1.0, 0.0, 0.0, opacity);
+			glVertex3f(25 + curVel* 3, i, 0);
+
+			glColor4f(1.0, 0.5, 0.0, opacity);
+			glVertex3f(25, -i, 0);
+			glColor4f(1.0, 0.0, 0.0, opacity);
+			glVertex3f(25 + curVel* 3, -i, 0);
+			}
+			*/
+		glEnd();
+
+		glTranslatef(25 + curVel * 3.5, 0, 0);
+		glRotatef(135, 0.0, 0.0, 1.0);
+		glBegin(GL_LINES);
+		opacity = 1;
+
+		glColor4f(1.0, 0.0, 0.0, opacity);
+		glVertex3f(0, 0, 1);
+		glColor4f(1.0, 0.5, 0.0, opacity);
+		glVertex3f(curVel * 1, 0, 1);
+
+		/*	for (int i = 1; i <= curVel / 10; i++) {
+			opacity = 0.75 / i;
+
+			glColor4f(1.0, 0.0, 0.0, opacity);
+			glVertex3f(0, i, 1);
+			glColor4f(1.0, 0.5, 0.0, opacity);
+			glVertex3f(curVel * 1, i, 1);
+
+			glColor4f(1.0, 0.0, 0.0, opacity);
+			glVertex3f(0, -i, 1);
+			glColor4f(1.0, 0.5, 0.0, opacity);
+			glVertex3f(curVel * 1, -i, 1);
+			}
+			*/
+		glEnd();
+
+		glRotatef(90, 0.0, 0.0, 1.0);
+		glBegin(GL_LINES);
+		opacity = 1;
+
+		glColor4f(1.0, 0.0, 0.0, opacity);
+		glVertex3f(0, 0, 1);
+		glColor4f(1.0, 0.5, 0.0, opacity);
+		glVertex3f(curVel * 1, 0, 1);
+		/*
+		   for (int i=1; i <= curVel / 10; i++) {
+		   opacity = 0.75 / i;
+
+		   glColor4f(1.0, 0.0, 0.0, opacity);
+		   glVertex3f(0, i, 1);
+		   glColor4f(1.0, 0.5, 0.0, opacity);
+		   glVertex3f(curVel * 1, i, 1);
+
+		   glColor4f(1.0, 0.0, 0.0, opacity);
+		   glVertex3f(0, -i, 1);
+		   glColor4f(1.0, 0.5, 0.0, opacity);
+		   glVertex3f(curVel * 1, -i, 1);
+		   }
+		   */
+		glEnd();
+		glPopMatrix();
+		glEnable(GL_TEXTURE_2D);
+	}
+
+    // then draw the tank
 	glRotatef(xRot, 1.0f, 0.0f, 0.0f);
 	glRotatef(yRot, 0.0f, 1.0f, 0.0f);
 	glRotatef(zRot, 0.0f, 0.0f, 1.0f);
 
-	glBegin(GL_QUADS);
-		glVertex3f(-w/2, -h/2, 0);
-		glVertex3f( w/2, -h/2, 0);
-		glVertex3f( w/2,  h/2, 0);
-		glVertex3f(-w/2,  h/2, 0);
+	glColor4f(1.0, 1.0, 1.0, 1.0); // white, full alpha body
+	glBindTexture(GL_TEXTURE_2D, texture);
 
-		glColor3f(1.0, 1.0, 0.0);
-		glVertex3f(w/2 - 7, -h/2 + 2, 1);
-		glVertex3f(w/2 - 2, -h/2 + 2, 1);
-		glVertex3f(w/2 - 2,  h/2 - 2, 1);
-		glVertex3f(w/2 - 7,  h/2 - 2, 1);
+	glBegin(GL_QUADS);
+		// bottom left corner
+		glTexCoord2i(0, 0); glVertex3f(-w/2, -h/2, 0);
+		// bottom right
+		glTexCoord2i(1, 0); glVertex3f( w/2, -h/2, 0);
+		// top right
+		glTexCoord2i(1, 1); glVertex3f( w/2,  h/2, 0);
+		// top left
+		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0);
 	glEnd();
 
 	glPopMatrix();
@@ -58,17 +159,43 @@ void Tank::display(float xView, float yView) {
 void Tank::onUpdate() {
 	if (x < 0 || x > map->getW()) { xVel = -xVel; x += xVel; }
 	if (y < 0 || y > map->getH()) { yVel = -yVel; y += yVel; }
-	if (z < 0 || z > 100) { zVel = -zVel; }
 
 	x += xVel;
 	y += yVel;
-	z += zVel;
 	zRot += zRotVel;
 
-	applyDrag(&xVel);
-	applyDrag(&yVel);
-	applyDrag(&zVel);
-	applyDrag(&zRotVel);
+	float vel = sqrt(pow(yVel, 2) + pow(xVel, 2)); 
+	float newVel = applyDrag(vel);
+	//printf("%f %f\n", vel, newVel);
+
+	if (newVel > 0.20) {
+		if (fabs(xVel) > 0.1) {
+			float xRatio = xVel / vel;
+			xVel = newVel * xRatio;
+		}
+		if (fabs(yVel) > 0.1) {
+			float yRatio = yVel / vel;
+			yVel = newVel * yRatio;
+		}
+	} else {
+		xVel = yVel = 0;
+	}
+
+
+	zRotVel = applyDrag(zRotVel);
+
+/*	if (xRot != 0) {
+		if (xRot < 0) {
+			xRot += 0.5;
+		} else {
+			xRot -= 0.5;
+		}
+	}
+*/
+//	applyDrag(&xVel);
+//	applyDrag(&yVel);
+
+
 }
 
 //==============================================================================
@@ -84,7 +211,7 @@ void Tank::turn(float angle) {
 };
 
 //------------------------------------------------------------------------------
-void Tank::applyDrag(float* vel) {
+float Tank::applyDrag(float vel) {
 	/*
 	 * The drag equation as found on Wikipedia:
 	 * FD = 1/2 pu^2 CD A
@@ -98,17 +225,29 @@ void Tank::applyDrag(float* vel) {
 	 * For us this mostly means it should be a quadratic equation
 	 */
 
-	// TODO would be cool to include atmosphere desity and reference area 
-	if (fabs(*vel) < 0.09) {
-		*vel = 0;
+	// TODO would be cool to include atmosphere desity and reference area
+/*
+	if (fabs(vel) < 0.1) {
+		vel = 0;
 	} else {
-		float drag = 0.01 * pow(*vel, 2);
-		if (*vel < 0) {
-			*vel += drag;
-		} else { 
-			*vel -= drag;
+		float drag = 0;
+		if (vel < 3){
+			drag = 0.01 * pow(vel, 2);
+		} else {
+			drag = 0.0001 * pow(vel, 4);
+		}
+
+		if (vel < 0) {
+			vel += drag;
+		} else {
+			vel -= drag;
 		}
 	}
+	return vel;
+*/
+
+	return vel * 0.99; // 1% drag per frame
+
 }
 
 //------------------------------------------------------------------------------
@@ -138,23 +277,35 @@ void Tank::pushBackward() {
 }
 
 void Tank::pushRight() {
-	push(zRot + 90, strafeFrc);
+	push(zRot - 90, strafeFrc);
+/*	if (xRot > -30) {
+		xRot -= 1;
+	}
+*/	
 }
 
 void Tank::pushLeft() {
-	push(zRot - 90, strafeFrc);
+	push(zRot + 90, strafeFrc);
+/*	if (xRot < 30) {
+		xRot += 1;
+	}
+*/
 }
 
 void Tank::turnLeft() {
-	turn(-turnFrc);
+	turn(turnFrc);
 }
 
 void Tank::turnRight() {
-	turn(turnFrc);
+	turn(-turnFrc);
 }
 
 void Tank::straighten() {
 	zRotVel = 0;
+}
+
+void Tank::setZRot(float angle) {
+	this->zRot = angle;
 }
 
 void Tank::gunLeft() {

@@ -10,11 +10,13 @@
 
 #define TORAD(X) X*(M_PI/180)
 #define TODEG(X) X*(180/M_PI)
+#define HYP(X, Y) sqrt(pow(x, 2) + pow(y, 2))
 
 class Tank {
 	private:
 		// map pointer
 		Map* map;
+		GLuint texture;
 
 		// size
 		int w;
@@ -52,8 +54,9 @@ class Tank {
 
 	public:
 		// System methods
-		Tank(Map* map, int x, int y);
-		void display(float xView, float yView);
+		Tank(Map* map, GLuint texture, int x, int y);
+		~Tank();
+		void display();
 		void onUpdate();
 
 		// driver interface
@@ -64,6 +67,7 @@ class Tank {
 		void turnLeft();
 		void turnRight();
 		void straighten();
+		void setZRot(float angle);
 
 		// gunner interface
 		void gunLeft();
@@ -81,7 +85,7 @@ class Tank {
 	private:
 		void push(float angle, float force);
 		void turn(float angle);
-		void applyDrag(float* vel);
+		float applyDrag(float vel);
 		void rotateGun(float angle);
 		void raiseGun(float angle);
 		void changePow(float force);

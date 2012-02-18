@@ -4,13 +4,23 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <SDL.h>
-#include <SDL_image.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_platform.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_opengl.h>
+
+#if defined( __WIN32__ )
+	#inlcude <direct.h>
+	#define PATH_LEN  _MAX_PATH
+#elif defined( __LINUX__ )
+	#include <unistd.h>
+	#include <linux/limits.h>
+	#define PATH_LEN  PATH_MAX
+#endif
 
 #include "tank.h"
 #include "map.h"
+#include "cursor.h"
 
 class Test {
 	private:
@@ -18,6 +28,9 @@ class Test {
 		bool            running;
 		SDL_Surface*    display;
 		bool            keys[322];
+		Cursor*         cursor;
+		int             xMouse;
+		int             yMouse;
 
 		// view port variables
 		float           wView;
@@ -25,25 +38,29 @@ class Test {
 		float           xView;
 		float           yView;
 		float           zoom;
+		bool            follow;
 
 		// player variables
 		Tank*           p1;
 		Map*            map;
 
 	public:
-		Test();                         // test.cpp
-		int onExecute();                // test.cpp
+		Test();                         
+		int onExecute();                
 
 	private:
-		bool onInit();                  // test.cpp
-		void onCleanup();               // test.cpp
-		void onEvent(SDL_Event* event); // eventHandling.cpp
-		void onInput();                 // eventHandling.cpp
-		void onRender();                // video.cpp
-		void onResize(int w, int h);    // video.cpp
-		void onZoom();                  // video.cpp
+		// system methods
+		bool onInit();                  
+		void onCleanup();               
+		void onEvent(SDL_Event* event); 
+		void onInput();                 
+		void onRender();                
+		void onResize(int w, int h);    
+
+		// helper methods
 		void setXView(float x);
 		void setYView(float y);
+		GLuint loadTexture(const char* file);
 };
 
 #endif // TEST_H_INCLUDED

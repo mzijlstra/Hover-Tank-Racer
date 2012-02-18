@@ -8,10 +8,12 @@ class Map {
 	private:
 		int w;
 		int h;
+		GLuint texture;
 	
 	public:
-		Map(int w, int h);
-		void display(float x, float y, float w, float h, float zoom);
+		Map(int w, int h, GLuint texture);
+		~Map();
+		void display();
 		int getW();
 		int getH();
 };

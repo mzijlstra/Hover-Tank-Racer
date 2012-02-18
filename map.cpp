@@ -1,36 +1,54 @@
 #include "map.h"
 
-Map::Map(int w, int h) {
+Map::Map(int w, int h, GLuint texture) {
 	this->w = w;
 	this->h = h;
+	this-> texture = texture;
 }
 
-void Map::display(float x, float y, float w, float h, float zoom) {
-	glColor3f(0.0, 1.0, 0.0);
+Map::~Map() {
+	glDeleteTextures(1, &texture);
+}
 
-	glEnable(GL_LINE_STIPPLE);
-	glLineStipple(1, 0x00ff);
+void Map::display() {
+	// This method could be optimized by calculating the part of the quad
+	// that is going to be inside the clipping area, and then only drawing
+	// a quad of that size, and only drawing stuff inside it
+	glPushMatrix();
+
+	// map itself is light grey
+	glColor3f(0.99, 0.99, 0.99);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glBegin(GL_QUADS);
+		// bottom left corner
+		glTexCoord2i(0, 0); glVertex3f(0.0f, 0.0f, 0.0f);
+		// bottom right
+		glTexCoord2i(1, 0); glVertex3f(   w, 0.0f, 0.0f);
+		// top right
+		glTexCoord2i(1, 1); glVertex3f(   w,    h, 0.0f);
+		// top left
+		glTexCoord2i(0, 1); glVertex3f(0.0f,    h, 0.0f);
+	glEnd();
+/*
+	// draw green grid lines every 64 px
+	glColor3f(0.0, 1.0, 0.0);
 	glBegin(GL_LINES);
 
-	int xRemainder = (int)x % 64;
-	int yRemainder = (int)y % 64;
-
-	for (int i = 0; i < w * zoom && i < this->w; i++) {
-		if ((xRemainder+ i) % 64 == 0) {
-			glVertex3f(i, 0, 1);
-			glVertex3f(i, h * zoom, 1);
-		}
+	// vertical lines
+	for (int i = 0; i < w; i += 64) {
+		glVertex3f(i, 0, 1);
+		glVertex3f(i, h, 1);
 	}
 
-	for (int i = 0; i < h * zoom && i < this->h; i++) {
-		if ((yRemainder + i) % 64 == 0) {
-			glVertex3f(0, i, 1);
-			glVertex3f(w * zoom, i, 1);
-		}
+	// horizontal lines
+	for (int i = 0; i < h; i += 64) {
+		glVertex3f(0, i, 1);
+		glVertex3f(w, i, 1);
 	}
-
 	glEnd();
-	glDisable(GL_LINE_STIPPLE);
+*/
+	glPopMatrix();
 }
 
 int Map::getW() {
