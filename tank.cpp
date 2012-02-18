@@ -1,10 +1,13 @@
 #include "tank.h"
 
-Tank::Tank(int x, int y) {
+//==============================================================================
+/* System functions */
+Tank::Tank(Map* map, int x, int y) {
+	this->map = map;
 	w = h = 32;
 	this->x = x;
 	this->y = y;
-	z = 100;
+	z = 5;
 
 	xRot = yRot = 0;
 	zRot = 0; // face north
@@ -14,7 +17,7 @@ Tank::Tank(int x, int y) {
 	forwardFrc = 1.0;
 	breakFrc = 0.5;
 	strafeFrc = 0.5;
-	turnFrc = 0.5;
+	turnFrc = 0.1;
 
 	gunRot = 0;
 	gunAngle = 45;
@@ -24,88 +27,107 @@ Tank::Tank(int x, int y) {
 	gunPowChgSpd = 1.0;
 }
 
-void Tank::display() {
+//------------------------------------------------------------------------------
+void Tank::display(float xView, float yView) {
 	glColor3f(0.0, 0.0, 1.0);
 
 	glPushMatrix();
 
-	glTranslatef(x, y, z);
+	glTranslatef(x - xView, y - yView, z);
 	glRotatef(xRot, 1.0f, 0.0f, 0.0f);
 	glRotatef(yRot, 0.0f, 1.0f, 0.0f);
 	glRotatef(zRot, 0.0f, 0.0f, 1.0f);
 
 	glBegin(GL_QUADS);
 		glVertex3f(-w/2, -h/2, 0);
-		glVertex3f(w/2, -h/2, 0);
-		glVertex3f(w/2, h/2, 0);
-		glVertex3f(-w/2, h/2, 0);	
+		glVertex3f( w/2, -h/2, 0);
+		glVertex3f( w/2,  h/2, 0);
+		glVertex3f(-w/2,  h/2, 0);
 
 		glColor3f(1.0, 1.0, 0.0);
-		glVertex3f(w/2 - 7, -h/2 + 2, -1);
-		glVertex3f(w/2 - 2, -h/2 + 2, -1);
-		glVertex3f(w/2 - 2,  h/2 - 2, -1);
-		glVertex3f(w/2 - 7,  h/2 - 2, -1);
+		glVertex3f(w/2 - 7, -h/2 + 2, 1);
+		glVertex3f(w/2 - 2, -h/2 + 2, 1);
+		glVertex3f(w/2 - 2,  h/2 - 2, 1);
+		glVertex3f(w/2 - 7,  h/2 - 2, 1);
 	glEnd();
 
 	glPopMatrix();
 }
 
+//------------------------------------------------------------------------------
 void Tank::onUpdate() {
-	if (x < 0 || x > 640) { xVel = -xVel; }
-	if (y < 0 || y > 480) { yVel = -yVel; }
+	if (x < 0 || x > map->getW()) { xVel = -xVel; x += xVel; }
+	if (y < 0 || y > map->getH()) { yVel = -yVel; y += yVel; }
 	if (z < 0 || z > 100) { zVel = -zVel; }
 
 	x += xVel;
 	y += yVel;
 	z += zVel;
 	zRot += zRotVel;
-	
-	// TODO should be based on gravity / wind / atmospher etc
-	float dragFrc = 0.1;
 
-	reduceVel(&xVel, dragFrc);
-	reduceVel(&yVel, dragFrc);
-	reduceVel(&zVel, dragFrc);
-	reduceVel(&zRotVel, dragFrc);
+	applyDrag(&xVel);
+	applyDrag(&yVel);
+	applyDrag(&zVel);
+	applyDrag(&zRotVel);
 }
 
+//==============================================================================
 /* private functions (the important stuff) */
 void Tank::push(float angle, float force) {
-	xVel += cos(TORAD(angle)) * force; 
+	xVel += cos(TORAD(angle)) * force;
 	yVel += sin(TORAD(angle)) * force;
 }
 
+//------------------------------------------------------------------------------
 void Tank::turn(float angle) {
 	zRotVel = fmod(zRotVel + angle, 360);
 };
 
-void Tank::reduceVel(float* vel, float frc) {
-	if (*vel == 0) {
-		return;
-	} else if (fabs(*vel) < frc) {
+//------------------------------------------------------------------------------
+void Tank::applyDrag(float* vel) {
+	/*
+	 * The drag equation as found on Wikipedia:
+	 * FD = 1/2 pu^2 CD A
+	 * Where:
+	 *   FD is the force of drag
+	 *   p  is the mass density of the fluid (air)
+	 *   u  is the velocity of the object relative to the fluid
+	 *   A  is the reference area (orhographic projection onto perpendicular)
+	 *   CD is the drag coefficient - a dimensionless constant e.g. 0.25 - 0.45
+	 *
+	 * For us this mostly means it should be a quadratic equation
+	 */
+
+	// TODO would be cool to include atmosphere desity and reference area 
+	if (fabs(*vel) < 0.09) {
 		*vel = 0;
 	} else {
+		float drag = 0.01 * pow(*vel, 2);
 		if (*vel < 0) {
-			*vel += frc;
-		} else {
-			*vel -= frc;
+			*vel += drag;
+		} else { 
+			*vel -= drag;
 		}
 	}
 }
 
+//------------------------------------------------------------------------------
 void Tank::rotateGun(float angle) {
 	gunRot += angle;
 }
 
+//------------------------------------------------------------------------------
 void Tank::raiseGun(float angle) {
 	gunAngle += angle;
 }
 
+//------------------------------------------------------------------------------
 void Tank::changePow(float force) {
 	gunPow += force;
 }
 
 
+//==============================================================================
 /* public interface functions -- built ontop of pirvate functions */
 void Tank::pushForward() {
 	push(zRot, forwardFrc);
@@ -132,7 +154,7 @@ void Tank::turnRight() {
 }
 
 void Tank::straighten() {
-	reduceVel(&zRotVel, turnFrc);
+	zRotVel = 0;
 }
 
 void Tank::gunLeft() {
@@ -162,3 +184,11 @@ void Tank::powerDecrease() {
 void Tank::fire() {
 	// TOOD make bullet etc
 }
+
+float Tank::getX() {
+	return x;
+}
+float Tank::getY() {
+	return y;
+}
+

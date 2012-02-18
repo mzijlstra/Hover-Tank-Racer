@@ -2,14 +2,20 @@
 #ifndef TANK_H_INCLUDED
 #define TANK_H_INCLUDED
 
+#include <stdio.h>
 #include <math.h>
 #include <GL/gl.h>
+
+#include "map.h"
 
 #define TORAD(X) X*(M_PI/180)
 #define TODEG(X) X*(180/M_PI)
 
 class Tank {
 	private:
+		// map pointer
+		Map* map;
+
 		// size
 		int w;
 		int h;
@@ -46,10 +52,10 @@ class Tank {
 
 	public:
 		// System methods
-		Tank(int x, int y);
-		void display();
+		Tank(Map* map, int x, int y);
+		void display(float xView, float yView);
 		void onUpdate();
-		
+
 		// driver interface
 		void pushForward();
 		void pushBackward();
@@ -68,10 +74,14 @@ class Tank {
 		void powerDecrease();
 		void fire();
 
+		// getters
+		float getX();
+		float getY();
+		
 	private:
 		void push(float angle, float force);
 		void turn(float angle);
-		void reduceVel(float* vel, float frc);
+		void applyDrag(float* vel);
 		void rotateGun(float angle);
 		void raiseGun(float angle);
 		void changePow(float force);

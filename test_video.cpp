@@ -3,7 +3,8 @@
 void Test::onRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	p1->display();
+	map->display(xView, yView, wView, hView, zoom);
+	p1->display(xView, yView);
 
     SDL_GL_SwapBuffers();
 }
@@ -26,15 +27,38 @@ void Test::onResize(int w, int h) {
 	glLoadIdentity();
 
 	// Establish clipping volume (left, right, bottom, top, near, far)
-	glOrtho(0, w * zoom, h * zoom, 0, 1000, -1000);
+	// -100 z for near is actually +100
+	glOrtho(0, w * zoom, h * zoom, 0, -100, 0);
+	//glFrustum(0, (w * zoom) / 100, (h * zoom) / 100, 0, 100, 0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	// set global width and hight
-	width = w;
-	height = h;
+	// set global view width and hight
+	wView = w;
+	hView = h;
 
 	//printf("resizing: %d %d\n", w, h);
 }
 
+void Test::onZoom() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	// -100 z for near is actually +100
+	glOrtho(0, wView * zoom, hView * zoom, 0, -100, 0);
+	//glFrustum(0, (wView * zoom)  / 100, (hView * zoom) / 100, 0, 100, 0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void Test::setXView(float x) {
+	xView = x; //p1->getX() - wView / 2;
+	if (xView < 0) xView = 0;
+	if (xView > map->getW() - wView) xView = map->getW() - wView;
+}
+
+void Test::setYView(float y) {
+	yView = y; //p1->getY() - hView / 2;
+	if (yView < 0) yView = 0;
+	if (yView > map->getH() - hView) yView = map->getH() - hView;
+}

@@ -23,38 +23,28 @@ void Test::onEvent(SDL_Event* event) {
 void Test::onInput() {
 	/* viewport modification stuffs */
 	if (keys[SDLK_RIGHT]) {
-		xRot++;
-	} 
+		if (xView < map->getW() - wView*zoom) { xView++; }
+	}
 	if (keys[SDLK_LEFT]) {
-		xRot--;
+		if (xView > 0) { xView--; }
 	}
 	if (keys[SDLK_DOWN]) {
-		yRot++;
+		if (yView < map->getH() - hView*zoom) { yView++; }
 	}
 	if (keys[SDLK_UP]) {
-		yRot--;
+		if (yView > 0) { yView--; }
 	}
 	if (keys[SDLK_COMMA]) {
 		zoom -= 0.01;
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, width * zoom, height * zoom, 0, 1000, -1000);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		
-		//printf("zoom: %f\n", zoom);
+		onZoom();
 	}
 	if (keys[SDLK_PERIOD]) {
 		zoom += 0.01;
-		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, width * zoom, height * zoom, 0, 1000, -1000);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		
-		//printf("zoom: %f\n", zoom);
+		onZoom();
+	}
+	if (keys[SDLK_KP0]) {
+		setXView(p1->getX() - wView / 2);
+		setYView(p1->getY() - hView / 2);
 	}
 
 	/* player controll */
@@ -64,6 +54,8 @@ void Test::onInput() {
 	if (keys[SDLK_d]) { p1->pushRight(); }
 	if (keys[SDLK_q]) { p1->turnLeft(); }
 	if (keys[SDLK_e]) { p1->turnRight(); }
+	if (keys[SDLK_SPACE]) { p1->straighten(); }
+
 
 	/* close program */
 	if (keys[SDLK_ESCAPE] ) {
