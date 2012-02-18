@@ -12,83 +12,55 @@
 #define TODEG(X) X*(180/M_PI)
 #define HYP(X, Y) sqrt(pow(x, 2) + pow(y, 2))
 
+struct vector {
+    float x;
+    float y;
+    float z;
+};
+
 class Tank {
 	private:
 		// map pointer
 		Map* map;
-		GLuint texture;
+
+		// textures
+		GLuint baseTex;
+		GLuint engFireTex;
+		GLuint gunTex;
 
 		// size
 		int w;
 		int h;
 
-		// position
-		float x;
-		float y;
-		float z;
+        bool engFire;
+        float engPow;
+        float gunRot;
 
-		// rotation
-		float xRot;
-		float yRot;
-		float zRot;
+        // TODO work on this
+        float gunTilt;
+        float gunPow;
 
-		// velocity
-		float xVel;
-		float yVel;
-		float zVel;
-		float zRotVel;
-
-		// forces
-		float forwardFrc;
-		float breakFrc;
-		float strafeFrc;
-		float turnFrc;
-
-		// gun related
-		float gunRot;
-		float gunAngle;
-		float gunPow;
-		float gunTurnSpd;
-		float gunRaiseSpd;
-		float gunPowChgSpd;
+        struct vector pos;
+        struct vector rot;
+        struct vector vel;
 
 	public:
 		// System methods
-		Tank(Map* map, GLuint texture, int x, int y);
+		Tank(Map* map, int x, int y, GLuint baseTex, GLuint engFireTex, GLuint gunTex);
 		~Tank();
 		void display();
 		void onUpdate();
 
-		// driver interface
-		void pushForward();
-		void pushBackward();
-		void pushRight();
-		void pushLeft();
-		void turnLeft();
-		void turnRight();
-		void straighten();
-		void setZRot(float angle);
-
-		// gunner interface
-		void gunLeft();
-		void gunRight();
-		void gunUp();
-		void gunDown();
-		void powerIncrease();
-		void powerDecrease();
-		void fire();
+		void engageEngine(float angle);
+		void setBaseRot(float angle);
+		void setGunRot(float angle);
 
 		// getters
 		float getX();
 		float getY();
-		
+
 	private:
-		void push(float angle, float force);
-		void turn(float angle);
 		float applyDrag(float vel);
-		void rotateGun(float angle);
-		void raiseGun(float angle);
-		void changePow(float force);
 };
 
 #endif // TANK_H_INCLUDED

@@ -1,12 +1,17 @@
-#include "test.h"
+#include "client.h"
 
 //==============================================================================
-Test::Test() {
+// Client class constructor
+//==============================================================================
+Client::Client() {
 	// system variables
     display = NULL;
     running = true;
 	for (int i=0; i < 322; i++) {
 		keys[i] = false;
+	}
+	for (int i=0; i< 6; i++) {
+	    mbts[i] = false;
 	}
 
 	// view port variables
@@ -23,7 +28,9 @@ Test::Test() {
 }
 
 //------------------------------------------------------------------------------
-int Test::onExecute() {
+// Main game loop inside the onExecute() method
+//------------------------------------------------------------------------------
+int Client::onExecute() {
     if(onInit() == false) {
         return -1;
     }
@@ -75,7 +82,9 @@ int Test::onExecute() {
 }
 
 //------------------------------------------------------------------------------
-bool Test::onInit() {
+// SDL and OpenGL setup in the onInit() method
+//------------------------------------------------------------------------------
+bool Client::onInit() {
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 		printf("problem initializing SDL\n");
         return false;
@@ -127,24 +136,31 @@ bool Test::onInit() {
 
 	// load textures
 	GLuint mapTexture    = 0;
-	GLuint tankTexture   = 0;
+	GLuint tankBaseTex = 0;
+	GLuint tankFireTex = 0;
+	GLuint tankGunTex = 0;
 	GLuint cursorTexture = 0;
-	if (   (mapTexture  = loadTexture("./graphics/test-track.png")) < 0
-		|| (tankTexture = loadTexture("./graphics/newtank2.png")) < 0
-		|| (cursorTexture = loadTexture("./graphics/triangle.png")) < 0)
+	if (   (mapTexture  = loadTexture("./graphics/moon landscape large.png")) < 0
+		|| (tankBaseTex = loadTexture("./graphics/tank3-base.png")) < 0
+        || (tankFireTex = loadTexture("./graphics/tank3-base-engfire.png")) < 0
+        || (tankGunTex = loadTexture("./graphics/tank3-gun.png")) < 0
+		|| (cursorTexture = loadTexture("./graphics/triangle-green.png")) < 0)
 	{
 		printf("problem loading textures\n");
 		return false;
 	}
 
 	map = new Map(4096, 4096, mapTexture);
-	p1 = new Tank(map, tankTexture, 100, 100);
+	p1 = new Tank(map, 100, 100, tankBaseTex, tankFireTex, tankGunTex);
 	cursor = new Cursor(0, 0, 0, cursorTexture);
 
     return true;
 }
 
-GLuint Test::loadTexture(const char* file) {
+//------------------------------------------------------------------------------
+// Helper method to load textures from file
+//------------------------------------------------------------------------------
+GLuint Client::loadTexture(const char* file) {
 	GLuint texture;		  // Handle to our texture object
 	SDL_Surface* surface; // surface will tell us the details of the image
 	GLenum texture_format;
@@ -172,13 +188,13 @@ GLuint Test::loadTexture(const char* file) {
 	// get the number of channels in the SDL surface
 	nOfColors = surface->format->BytesPerPixel;
 	if (nOfColors == 4) {    // contains an alpha channel
-		printf("texture has alpha\n");
+		//printf("texture has alpha\n");
 		if (surface->format->Rmask == 0x000000ff)
 			texture_format = GL_RGBA;
 		else
 			texture_format = GL_BGRA;
 	} else if (nOfColors == 3) {    // no alpha channel
-		printf("texture has no alpha\n");
+		//printf("texture has no alpha\n");
 		if (surface->format->Rmask == 0x000000ff)
 			texture_format = GL_RGB;
 		else
@@ -214,7 +230,9 @@ GLuint Test::loadTexture(const char* file) {
 }
 
 //------------------------------------------------------------------------------
-void Test::onEvent(SDL_Event* event) {
+// SDL event handeling by type, asynchronously called to handle events
+//------------------------------------------------------------------------------
+void Client::onEvent(SDL_Event* event) {
 	switch (event->type) {
 		case SDL_QUIT:
 			running = false;
@@ -237,20 +255,28 @@ void Test::onEvent(SDL_Event* event) {
 			xMouse = event->motion.x;
 			yMouse = event->motion.y;
 			break;
+        case SDL_MOUSEBUTTONDOWN:
+            mbts[event->button.button] = true;
+            break;
+        case SDL_MOUSEBUTTONUP:
+            mbts[event->button.button] = false;
+            break;
 		default:
 			break;
 	}
 }
 
 //------------------------------------------------------------------------------
-void Test::onInput() {
+// onInput() method is called from main game loop to check input state
+//------------------------------------------------------------------------------
+void Client::onInput() {
 	// update mouse pointer & p1 rotation
-	float xBotLeft = xView - wView / 2;
-	float yBotLeft = yView - hView / 2;
+	float xBotLeft = xView - wView / 2 * zoom;
+	float yBotLeft = yView - hView / 2 * zoom;
 	float xPlayer = p1->getX() - xBotLeft;
 	float yPlayer = p1->getY() - yBotLeft;
-	float x = xPlayer - xMouse;
-	float y = yPlayer - (hView - yMouse) ;
+	float x = xPlayer - xMouse * zoom;
+	float y = yPlayer - (hView * zoom - yMouse * zoom) ;
 	float angle = 0;
 	if (x != 0) {
 		angle = TODEG(atan(y / x));
@@ -260,15 +286,21 @@ void Test::onInput() {
 		} else {
 			angle = 90;
 		}
-	}	
+	}
 	if (x < 0) {
 		angle += 180;
 	}
-	cursor->setX(xBotLeft + xMouse);
-	cursor->setY(yBotLeft + hView - yMouse);
+	cursor->setX(xBotLeft + xMouse * zoom);
+	cursor->setY(yBotLeft + (hView * zoom) - yMouse * zoom);
 	//printf("%f, %f\n", xBotLeft + xMouse, yBotLeft + hView - yMouse);
 	cursor->setRot(angle);
-	p1->setZRot(180 + angle);
+
+    // if capslock is on, rotate gun, else rotate base
+	if (SDL_GetModState() & KMOD_CAPS) {
+        p1->setGunRot(180 + angle);
+	} else {
+	    p1->setBaseRot(180 + angle);
+	}
 
 	/* viewport modification stuffs */
 	if (keys[SDLK_RIGHT]) {
@@ -295,14 +327,14 @@ void Test::onInput() {
 	}
 
 	/* player controll */
-	if (keys[SDLK_w]) { p1->pushForward(); }
-	if (keys[SDLK_s]) { p1->pushBackward(); }
-	if (keys[SDLK_a]) { p1->pushLeft(); }
-	if (keys[SDLK_d]) { p1->pushRight(); }
-	if (keys[SDLK_q]) { p1->turnLeft(); }
-	if (keys[SDLK_e]) { p1->turnRight(); }
-	if (keys[SDLK_SPACE]) { p1->straighten(); }
+	if (keys[SDLK_w]) { p1->engageEngine(90); }
+	if (keys[SDLK_s]) { p1->engageEngine(270); }
+	if (keys[SDLK_a]) { p1->engageEngine(180); }
+	if (keys[SDLK_d]) { p1->engageEngine(0); }
 
+	if (mbts[SDL_BUTTON_LEFT]) {
+	    p1->engageEngine(angle + 180);
+	}
 
 	/* close program */
 	if (keys[SDLK_ESCAPE] ) {
@@ -311,7 +343,9 @@ void Test::onInput() {
 }
 
 //------------------------------------------------------------------------------
-void Test::onRender() {
+// onRender() is called from inside the main game loop to display game state
+//------------------------------------------------------------------------------
+void Client::onRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// reset to identity matrix
@@ -326,58 +360,14 @@ void Test::onRender() {
 	map->display();
 	p1->display();
 	cursor->display();
-	//renderCursor();
 
     SDL_GL_SwapBuffers();
 }
 
-/* TODO I should probably make a cursor class at some point 
-void Test::renderCursor() {
-	// calculate angle between cursor and player
-	float xBotLeft = xView - wView / 2;
-	float yBotLeft = yView - hView / 2;
-
-	float xPlayer = p1->getX() - xBotLeft;
-	float yPlayer = p1->getY() - yBotLeft;
-
-	float x = xPlayer - xMouse;
-	float y = yPlayer - (hView - yMouse) ;
-	float angle = 0;
-	if (x != 0) {
-		angle = TODEG(atan(y / x));
-	} else  {
-		if (y < 0) {
-			angle = -90;
-		} else {
-			angle = 90;
-		}
-	}	
-	if (x < 0) {
-		angle += 180;
-	}
-
-	glPushMatrix();
-
-	glTranslatef(xBotLeft + xMouse, yBotLeft + hView - yMouse, 0.0);
-	glRotatef(angle, 0.0, 0.0, 1.0);
-
-	glColor4f(1.0, 1.0, 1.0, 1.0);
-	glBindTexture(GL_TEXTURE_2D, cursorTexture);
-	glBegin(GL_QUADS);
-		// triangle points up by default, we want it to point right
-		// applied texture so that it indeed points right
-		glTexCoord2i(1, 0); glVertex3f(-8.0, -8.0, 5.0);
-		glTexCoord2i(1, 1); glVertex3f( 8.0, -8.0, 5.0);
-		glTexCoord2i(0, 1); glVertex3f( 8.0,  8.0, 5.0);
-		glTexCoord2i(0, 0); glVertex3f(-8.0,  8.0, 5.0);
-	glEnd();
-
-	glPopMatrix();
-}
-*/
-
 //------------------------------------------------------------------------------
-void Test::onResize(int w, int h) {
+// onResize() is called during window init, and on resize events
+//------------------------------------------------------------------------------
+void Client::onResize(int w, int h) {
 	// never less than 640x480
 	if (w < 640) w = 640;
 	if (h < 480) h = 480;
@@ -405,7 +395,7 @@ void Test::onResize(int w, int h) {
 	hView = h;
 }
 
-void Test::setXView(float x) {
+void Client::setXView(float x) {
 	xView = x;
 
 	// check border conditions
@@ -414,7 +404,7 @@ void Test::setXView(float x) {
 	if (xView > map->getW() - wZoomed) xView = map->getW() - wZoomed;
 }
 
-void Test::setYView(float y) {
+void Client::setYView(float y) {
 	yView = y;
 
 	// check border conditions
@@ -424,7 +414,9 @@ void Test::setYView(float y) {
 }
 
 //------------------------------------------------------------------------------
-void Test::onCleanup() {
+// onCleanup() is called at the end of the main game loop
+//------------------------------------------------------------------------------
+void Client::onCleanup() {
 	delete p1;
 	delete map;
     SDL_FreeSurface(display);
@@ -432,8 +424,10 @@ void Test::onCleanup() {
 }
 
 //==============================================================================
+// Main function creates and starts a client
+//==============================================================================
 int main(int argc, char* argv[]) {
-    Test test;
+    Client test;
     return test.onExecute();
 }
 

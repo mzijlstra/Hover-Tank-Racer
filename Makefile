@@ -11,7 +11,7 @@ INCFLAGS=-I/usr/include/GL -I/usr/include/SDL
 LDFLAGS=`sdl-config --libs` -lSDL -lSDL_image -lGL -lGLU 
 
 main:
-	$(CC) $(CPPFLAGS) $(INCFLAGS) $(LDFLAGS) -o test test.cpp tank.cpp map.cpp cursor.cpp
+	$(CC) $(CPPFLAGS) $(INCFLAGS) $(LDFLAGS) -o client client.cpp tank.cpp map.cpp cursor.cpp
 
 
 # Windows cross compiler
@@ -27,10 +27,10 @@ WININC=-I/usr/i586-mingw32msvc/include/SDL -I/usr/i586-mingw32msvc/include/GL
 WINLD=-lmingw32 -lSDLmain -lSDL -lSDL_image -lopengl32 -lglu32 
 
 windows:
-	$(WIN) $(CPPFLAGS) $(WININC) $(WINLD) -o test.exe test.cpp tank.cpp map.cpp
+	$(WIN) $(CPPFLAGS) $(WININC) $(WINLD) -o client.exe client.cpp tank.cpp map.cpp
 
 # cleanup
 clean:
-	rm test
+	rm client
 
 # EOF

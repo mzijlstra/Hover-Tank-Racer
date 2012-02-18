@@ -2,34 +2,34 @@
 
 //==============================================================================
 /* System functions */
-Tank::Tank(Map* map, GLuint texture, int x, int y) {
+
+//---------Constructor----------------------------------------------------------
+Tank::Tank(Map* map, int x, int y, GLuint baseTex, GLuint engFireTex, GLuint gunTex) {
 	this->map = map;
-	this->texture = texture;
-	w = h = 32;
-	this->x = x;
-	this->y = y;
-	z = 15;
+	this->baseTex = baseTex;
+	this->engFireTex = engFireTex;
+	this->gunTex = gunTex;
 
-	xRot = yRot = 0;
-	zRot = 0; // face north
+	w = h = 32; // 32x32 square
+    engFire = false;
+    engPow = 0.25;
+    gunRot = 0;
+    gunTilt = 45;
+    gunPow = 20;
 
-	xVel = yVel = zVel = zRotVel = 0; // not moving
+	pos.x = x;
+	pos.y = y;
+	pos.z = 2;
 
-	forwardFrc = 0.25;
-	breakFrc = 0.25;
-	strafeFrc = 0.25;
-	turnFrc = 0.1;
-
-	gunRot = 0;
-	gunAngle = 45;
-	gunPow = 50;
-	gunTurnSpd = 1.0;
-	gunRaiseSpd = 1.0;
-	gunPowChgSpd = 1.0;
+    rot.x = rot.y = rot.z = 0; // face north
+	vel.x = vel.y = vel.z = 0; // not moving
 }
 
+//--------Destructor------------------------------------------------------------
 Tank::~Tank() {
-	glDeleteTextures(1, &texture);
+	glDeleteTextures(1, &baseTex);
+	glDeleteTextures(1, &engFireTex);
+	glDeleteTextures(1, &gunTex);
 }
 
 //------------------------------------------------------------------------------
@@ -37,11 +37,11 @@ void Tank::display() {
 
 	glPushMatrix();
 
-	glTranslatef(x, y, z);
+	glTranslatef(pos.x, pos.y, pos.z);
 
     // first draw the velocity arrow
-    float curVel   = sqrt(pow(yVel, 2) + pow(xVel, 2));
-	if (curVel > 1.5) {
+    float curVel   = sqrt(pow(vel.y, 2) + pow(vel.x, 2));
+	if (curVel > 0.2) {
 		glDisable(GL_TEXTURE_2D);
 		glPushMatrix();
 
@@ -49,8 +49,8 @@ void Tank::display() {
 		glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
 		glEnable(GL_LINE_SMOOTH);
 
-		float velAngle = TODEG(atan(yVel / xVel));
-		if (xVel < 0) {
+		float velAngle = TODEG(atan(vel.y / vel.x));
+		if (vel.x < 0) {
 			velAngle += 180;
 		}
 
@@ -58,25 +58,11 @@ void Tank::display() {
 		glBegin(GL_LINES);
 		float opacity = 1;
 
-		glColor4f(1.0, 0.5, 0.0, opacity);
+		glColor4f(0.0, 1.0, 0.0, opacity);
 		glVertex3f(25, 0, 0);
-		glColor4f(1.0, 0.0, 0.0, opacity);
+		glColor4f(0.5, 1.0, 0.0, opacity);
 		glVertex3f(25 + curVel* 3, 0, 0);
 
-		/*	for (float i=1; i <= curVel / 5; i++) {
-			opacity = 0.75 / i;
-
-			glColor4f(1.0, 0.5, 0.0, opacity);
-			glVertex3f(25, i, 0);
-			glColor4f(1.0, 0.0, 0.0, opacity);
-			glVertex3f(25 + curVel* 3, i, 0);
-
-			glColor4f(1.0, 0.5, 0.0, opacity);
-			glVertex3f(25, -i, 0);
-			glColor4f(1.0, 0.0, 0.0, opacity);
-			glVertex3f(25 + curVel* 3, -i, 0);
-			}
-			*/
 		glEnd();
 
 		glTranslatef(25 + curVel * 3.5, 0, 0);
@@ -84,62 +70,131 @@ void Tank::display() {
 		glBegin(GL_LINES);
 		opacity = 1;
 
-		glColor4f(1.0, 0.0, 0.0, opacity);
+		glColor4f(0.0, 1.0, 0.0, opacity);
 		glVertex3f(0, 0, 1);
-		glColor4f(1.0, 0.5, 0.0, opacity);
+		glColor4f(0.5, 1.0, 0.0, opacity);
 		glVertex3f(curVel * 1, 0, 1);
 
-		/*	for (int i = 1; i <= curVel / 10; i++) {
-			opacity = 0.75 / i;
-
-			glColor4f(1.0, 0.0, 0.0, opacity);
-			glVertex3f(0, i, 1);
-			glColor4f(1.0, 0.5, 0.0, opacity);
-			glVertex3f(curVel * 1, i, 1);
-
-			glColor4f(1.0, 0.0, 0.0, opacity);
-			glVertex3f(0, -i, 1);
-			glColor4f(1.0, 0.5, 0.0, opacity);
-			glVertex3f(curVel * 1, -i, 1);
-			}
-			*/
 		glEnd();
 
 		glRotatef(90, 0.0, 0.0, 1.0);
 		glBegin(GL_LINES);
 		opacity = 1;
 
-		glColor4f(1.0, 0.0, 0.0, opacity);
+		glColor4f(0.0, 1.0, 0.0, opacity);
 		glVertex3f(0, 0, 1);
-		glColor4f(1.0, 0.5, 0.0, opacity);
+		glColor4f(0.5, 1.0, 0.0, opacity);
 		glVertex3f(curVel * 1, 0, 1);
-		/*
-		   for (int i=1; i <= curVel / 10; i++) {
-		   opacity = 0.75 / i;
 
-		   glColor4f(1.0, 0.0, 0.0, opacity);
-		   glVertex3f(0, i, 1);
-		   glColor4f(1.0, 0.5, 0.0, opacity);
-		   glVertex3f(curVel * 1, i, 1);
-
-		   glColor4f(1.0, 0.0, 0.0, opacity);
-		   glVertex3f(0, -i, 1);
-		   glColor4f(1.0, 0.5, 0.0, opacity);
-		   glVertex3f(curVel * 1, -i, 1);
-		   }
-		   */
 		glEnd();
 		glPopMatrix();
 		glEnable(GL_TEXTURE_2D);
 	}
 
-    // then draw the tank
-	glRotatef(xRot, 1.0f, 0.0f, 0.0f);
-	glRotatef(yRot, 0.0f, 1.0f, 0.0f);
-	glRotatef(zRot, 0.0f, 0.0f, 1.0f);
+    // draw targeting line
+    if (gunPow > 0) {
+        glPushMatrix();
+
+        // TODO gravity should probably be defined in the map
+        float gravity = 1.0;
+
+
+        // where ax^2 + bx is trajectory with gravity
+        // gunTilt => atan(b)
+        // gunPow => hypotenus (not taking gravity in account)
+        float Y = sin(TORAD(gunTilt)) * gunPow; // upwards motion of bullet
+        float X = cos(TORAD(gunTilt)) * gunPow; // ground velocity of bullet
+        float Yp = Y - gravity;
+        float C = pos.z + 1; // nozzle elevation above the ground
+        float B = Y / X; // equal to tan(gunTilt)
+        float A = (Yp - B*X) / (X*X); // find A based on change in Y
+        float len = (-B - sqrt((B*B) - 4*A*C)) / (2*A); // quadratic formula
+
+        float acc = 8; // croshair accuracy
+
+ 		// enable line smoothing
+		glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
+		glEnable(GL_LINE_SMOOTH);
+
+        // current gun rotation
+        glRotatef(gunRot, 0.0f, 0.0f, 1.0f);
+
+        // enable line stippling
+        glEnable(GL_LINE_STIPPLE);
+        GLushort pattern = 0x00FF;
+        GLint factor = 1;
+        glLineStipple(factor, pattern);
+
+        // draw line from tank to target
+        glBegin(GL_LINES);
+            glColor4f(1.0, 0.0, 0.0, 0.5);
+            glVertex3f(25, 0, 0);
+            glColor4f(1.0, 0.3, 0.0, 0.5);
+            glVertex3f(len - acc, 0, 0);
+        glEnd();
+
+
+        // draw the 4 croshair lines
+        glBegin(GL_LINES);
+            glColor4f(1.0, 0.0, 0.0, 0.5);
+            glVertex3f(len - acc, +acc, 0);
+            glColor4f(1.0, 0.3, 0.0, 0.5);
+            glVertex3f(len, 0, 0);
+        glEnd();
+
+        glBegin(GL_LINES);
+            glColor4f(1.0, 0.0, 0.0, 0.5);
+            glVertex3f(len - acc, -acc, 0);
+            glColor4f(1.0, 0.3, 0.0, 0.5);
+            glVertex3f(len, 0, 0);
+        glEnd();
+
+        glBegin(GL_LINES);
+            glColor4f(1.0, 0.0, 0.0, 0.5);
+            glVertex3f(len + acc, +acc, 0);
+            glColor4f(1.0, 0.3, 0.0, 0.5);
+            glVertex3f(len, 0, 0);
+        glEnd();
+
+        glBegin(GL_LINES);
+            glColor4f(1.0, 0.0, 0.0, 0.5);
+            glVertex3f(len + acc, -acc, 0);
+            glColor4f(1.0, 0.3, 0.0, 0.5);
+            glVertex3f(len, 0, 0);
+        glEnd();
+
+        glDisable(GL_LINE_STIPPLE);
+
+        glPopMatrix();
+    }
+
+    // draw the tank base
+	glRotatef(rot.x, 1.0f, 0.0f, 0.0f);
+	glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
+	glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
 
 	glColor4f(1.0, 1.0, 1.0, 1.0); // white, full alpha body
+	GLuint texture = engFire ? engFireTex : baseTex;
+	engFire = false; // reset engFire state to false
 	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glBegin(GL_QUADS);
+		// bottom left corner
+		glTexCoord2i(0, 0); glVertex3f(-w/2, -h/2, 0);
+		// bottom right
+		glTexCoord2i(1, 0); glVertex3f( w/2, -h/2, 0);
+		// top right
+		glTexCoord2i(1, 1); glVertex3f( w/2,  h/2, 0);
+		// top left
+		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0);
+	glEnd();
+
+    // draw the tank gun
+   	glTranslatef(0, 0, 1);
+	glRotatef(gunRot - rot.z, 0.0f, 0.0f, 1.0f);
+
+	glColor4f(1.0, 1.0, 1.0, 1.0); // white, full alpha body
+	glBindTexture(GL_TEXTURE_2D, gunTex);
 
 	glBegin(GL_QUADS);
 		// bottom left corner
@@ -157,60 +212,56 @@ void Tank::display() {
 
 //------------------------------------------------------------------------------
 void Tank::onUpdate() {
-	if (x < 0 || x > map->getW()) { xVel = -xVel; x += xVel; }
-	if (y < 0 || y > map->getH()) { yVel = -yVel; y += yVel; }
+	if (pos.x < 0 || pos.x > map->getW()) { vel.x = -vel.x; pos.x += vel.x; }
+	if (pos.y < 0 || pos.y > map->getH()) { vel.y = -vel.y; pos.y += vel.y; }
 
-	x += xVel;
-	y += yVel;
-	zRot += zRotVel;
+	pos.x += vel.x;
+	pos.y += vel.y;
 
-	float vel = sqrt(pow(yVel, 2) + pow(xVel, 2)); 
-	float newVel = applyDrag(vel);
-	//printf("%f %f\n", vel, newVel);
+	float curVel = sqrt(pow(vel.y, 2) + pow(vel.x, 2));
+	float newVel = applyDrag(curVel);
 
 	if (newVel > 0.20) {
-		if (fabs(xVel) > 0.1) {
-			float xRatio = xVel / vel;
-			xVel = newVel * xRatio;
+		if (fabs(vel.x) > 0.1) {
+			float xRatio = vel.x / curVel;
+			vel.x = newVel * xRatio;
 		}
-		if (fabs(yVel) > 0.1) {
-			float yRatio = yVel / vel;
-			yVel = newVel * yRatio;
+		if (fabs(vel.y) > 0.1) {
+			float yRatio = vel.y / curVel;
+			vel.y = newVel * yRatio;
 		}
-	} else {
-		xVel = yVel = 0;
+	} else { // stop when curVel <= 0.20
+		vel.x = vel.y = 0;
 	}
-
-
-	zRotVel = applyDrag(zRotVel);
-
-/*	if (xRot != 0) {
-		if (xRot < 0) {
-			xRot += 0.5;
-		} else {
-			xRot -= 0.5;
-		}
-	}
-*/
-//	applyDrag(&xVel);
-//	applyDrag(&yVel);
-
-
 }
 
 //==============================================================================
-/* private functions (the important stuff) */
-void Tank::push(float angle, float force) {
-	xVel += cos(TORAD(angle)) * force;
-	yVel += sin(TORAD(angle)) * force;
+/* public interface functions */
+
+//------------------------------------------------------------------------------
+void Tank::engageEngine(float angle) {
+	vel.x += cos(TORAD(angle)) * engPow;
+	vel.y += sin(TORAD(angle)) * engPow;
+	engFire = true;
 }
 
-//------------------------------------------------------------------------------
-void Tank::turn(float angle) {
-	zRotVel = fmod(zRotVel + angle, 360);
-};
+void Tank::setBaseRot(float angle) {
+	rot.z = angle;
+}
 
-//------------------------------------------------------------------------------
+void Tank::setGunRot(float angle) {
+	gunRot = angle;
+}
+
+float Tank::getX() {
+	return pos.x;
+}
+float Tank::getY() {
+	return pos.y;
+}
+
+//==============================================================================
+/* private (helper) functions */
 float Tank::applyDrag(float vel) {
 	/*
 	 * The drag equation as found on Wikipedia:
@@ -225,121 +276,6 @@ float Tank::applyDrag(float vel) {
 	 * For us this mostly means it should be a quadratic equation
 	 */
 
-	// TODO would be cool to include atmosphere desity and reference area
-/*
-	if (fabs(vel) < 0.1) {
-		vel = 0;
-	} else {
-		float drag = 0;
-		if (vel < 3){
-			drag = 0.01 * pow(vel, 2);
-		} else {
-			drag = 0.0001 * pow(vel, 4);
-		}
-
-		if (vel < 0) {
-			vel += drag;
-		} else {
-			vel -= drag;
-		}
-	}
-	return vel;
-*/
-
-	return vel * 0.99; // 1% drag per frame
+	return vel * 0.995; // 0.1% drag per frame
 
 }
-
-//------------------------------------------------------------------------------
-void Tank::rotateGun(float angle) {
-	gunRot += angle;
-}
-
-//------------------------------------------------------------------------------
-void Tank::raiseGun(float angle) {
-	gunAngle += angle;
-}
-
-//------------------------------------------------------------------------------
-void Tank::changePow(float force) {
-	gunPow += force;
-}
-
-
-//==============================================================================
-/* public interface functions -- built ontop of pirvate functions */
-void Tank::pushForward() {
-	push(zRot, forwardFrc);
-}
-
-void Tank::pushBackward() {
-	push(zRot + 180, breakFrc);
-}
-
-void Tank::pushRight() {
-	push(zRot - 90, strafeFrc);
-/*	if (xRot > -30) {
-		xRot -= 1;
-	}
-*/	
-}
-
-void Tank::pushLeft() {
-	push(zRot + 90, strafeFrc);
-/*	if (xRot < 30) {
-		xRot += 1;
-	}
-*/
-}
-
-void Tank::turnLeft() {
-	turn(turnFrc);
-}
-
-void Tank::turnRight() {
-	turn(-turnFrc);
-}
-
-void Tank::straighten() {
-	zRotVel = 0;
-}
-
-void Tank::setZRot(float angle) {
-	this->zRot = angle;
-}
-
-void Tank::gunLeft() {
-	rotateGun(gunTurnSpd);
-}
-
-void Tank::gunRight() {
-	rotateGun(-gunTurnSpd);
-}
-
-void Tank::gunUp() {
-	raiseGun(gunRaiseSpd);
-}
-
-void Tank::gunDown() {
-	raiseGun(-gunRaiseSpd);
-}
-
-void Tank::powerIncrease() {
-	changePow(gunPowChgSpd);
-}
-
-void Tank::powerDecrease() {
-	changePow(-gunPowChgSpd);
-}
-
-void Tank::fire() {
-	// TOOD make bullet etc
-}
-
-float Tank::getX() {
-	return x;
-}
-float Tank::getY() {
-	return y;
-}
-

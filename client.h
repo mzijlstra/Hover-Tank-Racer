@@ -10,7 +10,7 @@
 #include <SDL/SDL_opengl.h>
 
 #if defined( __WIN32__ )
-	#inlcude <direct.h>
+    #include <direct.h>
 	#define PATH_LEN  _MAX_PATH
 #elif defined( __LINUX__ )
 	#include <unistd.h>
@@ -22,12 +22,13 @@
 #include "map.h"
 #include "cursor.h"
 
-class Test {
+class Client {
 	private:
 		// system variables
 		bool            running;
 		SDL_Surface*    display;
 		bool            keys[322];
+		bool            mbts[6];
 		Cursor*         cursor;
 		int             xMouse;
 		int             yMouse;
@@ -45,17 +46,17 @@ class Test {
 		Map*            map;
 
 	public:
-		Test();                         
-		int onExecute();                
+		Client();
+		int onExecute();
 
 	private:
 		// system methods
-		bool onInit();                  
-		void onCleanup();               
-		void onEvent(SDL_Event* event); 
-		void onInput();                 
-		void onRender();                
-		void onResize(int w, int h);    
+		bool onInit();
+		void onCleanup();
+		void onEvent(SDL_Event* event);
+		void onInput();
+		void onRender();
+		void onResize(int w, int h);
 
 		// helper methods
 		void setXView(float x);
