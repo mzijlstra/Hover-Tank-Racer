@@ -1,0 +1,15 @@
+Hover Tank Racer
+
+This is my little SDL / OpenGL project. I mainly made it as a way to get some
+experience with SDL and OpenGL.
+
+The goal of the project is to make a little top down floating tank game, with 
+physics (if you shoot the recoil should move the tank), an ellaborate array of
+weapons (something like scorche earth), an energy management system (something
+like X-Wing and Tie figther)...  And if I ever get to it, multi-display, and 
+networking - Specifically to allow multiple people to control the tank, making
+one person the driver, one the gunner, and perhaps a third an engineer.
+
+Anyway, so far all I really have is some basic stuff moving around the screen,
+but who knows, perhaps I'll actually build this into a nice little game someday.
+
