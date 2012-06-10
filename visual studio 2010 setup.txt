@@ -1,0 +1,32 @@
+Download and install visual studio express c++ 2010 
+
+Download and install DirectX SDK (june 2010) This gave an error s1023 turns out you have to uninstall a directx service pack or something first, see the following for details, uninstall is easy from the command line: http://blogs.msdn.com/b/chuckw/archive/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error.aspx
+
+Download and install mercurial, you will probably need to add c:\program files\mercurial\ to your path, either permanently or type: set PATH=%PATH%;c:\program files\mercurial\  everytime before using it (which may just be once for the next step)
+
+Use mercurial to download the latest version of libSDL using:  hg clone http://hg.libsdl.org/SDL
+
+Visual studio 2010 express says when opening the SDL solution (SDL_VS2010.sln): Solution folders are not supported in this version of the application. Solution folder 'tests' will be displayed as unavailable.
+
+When trying to build the solution (F7 hotkey) it gives fatal errors for all of the test projects (clearly related to our earlier error), but seems to have build SDL.dll correctly for the main SDL project. Right clicking on the SDLmain (sub) project and selecting build also allowed me to correctly build it. These are the only two things we needed compiled anyway, the rest are just tests.
+
+I created a lib directory inside the VisualC of the SDL dir and copied SDL.lib and SDLmain.lib into it from their debug directories just now created when compiling.
+
+I then followed the instructions here: http://lazyfoo.net/SDL_tutorials/lesson01/windows/msvsnet2010e/index.php that showed how to create a new empty project, and update the project's include directories to also use the SDL include directory (downloaded as part of the sources) and add the just created lib directory to the project libraries path.
+
+The in the linker settings also link SDL.lib and SDLmain.lib, and set the linker subsystem to windows (subsystem:windows).  Create a new source file with an SDL_Init() and an SDL_Quit(). The tutorial also shows that under the C++ options in the Code Generation section I should set the Runtime Library to Multi-threaded DLL (/MD)... But there are no C/C++ options for my project in visual studio express.
+
+Ah, it shows up after something has been compiled, anyway some other sources said it should be set to multi-threaded debug DLL (/MDd) which is actually the default setting (now that I found it).
+
+Anyway, I put the SDL.dll that I had compiled earlier in with this project's .exe file and ran it to see that it worked (did nothing visible, which is significant because it also didn't crash / report that it was missing the dll).
+
+I did some googling, and found that to add opengl support I just need to add opengl32.lib and glu32.lib in the linker options. 
+
+Most of my other code uses <SDL/SDL.h> for includes, which means that they are in a system directory (and don't need special include settings either) After looking around I found the system includes in the directory: C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Include and put the SDL stuff in its own sub-directory inside it.
+
+
+To get things working for the 0.1 project:
+
+I forgot to set under the "project properties" -> "configuration properties" -> Linker -> System the subsystem to Windows.
+
+I put SDL.dll, SDL_image.dll, libpng15-15.dll, zlib1.dll inside the debug directory.

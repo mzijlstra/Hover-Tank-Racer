@@ -107,8 +107,10 @@ void Tank::display() {
         float Yp = Y - gravity;
         float C = pos.z + 1; // nozzle elevation above the ground
         float B = Y / X; // equal to tan(gunTilt)
-        float A = (Yp - B*X) / (X*X); // find A based on change in Y
+        float A = (Yp - Y) / (X*X); // find A based on change in Y
         float len = (-B - sqrt((B*B) - 4*A*C)) / (2*A); // quadratic formula
+		//float ticks = len / X; // amount of ticks projectile need to get there
+
 
         float acc = 8; // croshair accuracy
 
@@ -127,40 +129,40 @@ void Tank::display() {
 
         // draw line from tank to target
         glBegin(GL_LINES);
-            glColor4f(1.0, 0.0, 0.0, 0.5);
-            glVertex3f(25, 0, 0);
-            glColor4f(1.0, 0.3, 0.0, 0.5);
-            glVertex3f(len - acc, 0, 0);
+            glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+            glVertex3f(25.0f, 0.0f, 0.0f);
+            glColor4f(1.0f, 0.3f, 0.0f, 0.5f);
+            glVertex3f(len - acc, 0.0f, 0.0f);
         glEnd();
 
 
         // draw the 4 croshair lines
         glBegin(GL_LINES);
-            glColor4f(1.0, 0.0, 0.0, 0.5);
-            glVertex3f(len - acc, +acc, 0);
-            glColor4f(1.0, 0.3, 0.0, 0.5);
-            glVertex3f(len, 0, 0);
+            glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+            glVertex3f(len - acc, +acc, 0.0f);
+            glColor4f(1.0f, 0.3f, 0.0f, 0.5f);
+            glVertex3f(len, 0.0f, 0.0f);
         glEnd();
 
         glBegin(GL_LINES);
-            glColor4f(1.0, 0.0, 0.0, 0.5);
-            glVertex3f(len - acc, -acc, 0);
-            glColor4f(1.0, 0.3, 0.0, 0.5);
-            glVertex3f(len, 0, 0);
+            glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+            glVertex3f(len - acc, -acc, 0.0f);
+            glColor4f(1.0f, 0.3f, 0.0f, 0.5f);
+            glVertex3f(len, 0.0f, 0.0f);
         glEnd();
 
         glBegin(GL_LINES);
-            glColor4f(1.0, 0.0, 0.0, 0.5);
+            glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
             glVertex3f(len + acc, +acc, 0);
-            glColor4f(1.0, 0.3, 0.0, 0.5);
-            glVertex3f(len, 0, 0);
+            glColor4f(1.0f, 0.3f, 0.0f, 0.5f);
+            glVertex3f(len, 0.0f, 0.0f);
         glEnd();
 
         glBegin(GL_LINES);
-            glColor4f(1.0, 0.0, 0.0, 0.5);
-            glVertex3f(len + acc, -acc, 0);
-            glColor4f(1.0, 0.3, 0.0, 0.5);
-            glVertex3f(len, 0, 0);
+            glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+            glVertex3f(len + acc, -acc, 0.0f);
+            glColor4f(1.0f, 0.3f, 0.0f, 0.5f);
+            glVertex3f(len, 0.0f, 0.0f);
         glEnd();
 
         glDisable(GL_LINE_STIPPLE);
@@ -173,38 +175,38 @@ void Tank::display() {
 	glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
 	glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
 
-	glColor4f(1.0, 1.0, 1.0, 1.0); // white, full alpha body
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f); // white, full alpha body
 	GLuint texture = engFire ? engFireTex : baseTex;
 	engFire = false; // reset engFire state to false
 	glBindTexture(GL_TEXTURE_2D, texture);
 
 	glBegin(GL_QUADS);
 		// bottom left corner
-		glTexCoord2i(0, 0); glVertex3f(-w/2, -h/2, 0);
+		glTexCoord2i(0, 0); glVertex3f(-w/2, -h/2, 0.0f);
 		// bottom right
-		glTexCoord2i(1, 0); glVertex3f( w/2, -h/2, 0);
+		glTexCoord2i(1, 0); glVertex3f( w/2, -h/2, 0.0f);
 		// top right
-		glTexCoord2i(1, 1); glVertex3f( w/2,  h/2, 0);
+		glTexCoord2i(1, 1); glVertex3f( w/2,  h/2, 0.0f);
 		// top left
-		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0);
+		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0.0f);
 	glEnd();
 
     // draw the tank gun
-   	glTranslatef(0, 0, 1);
+   	glTranslatef(0.0f, 0.0f, 1.0f);
 	glRotatef(gunRot - rot.z, 0.0f, 0.0f, 1.0f);
 
-	glColor4f(1.0, 1.0, 1.0, 1.0); // white, full alpha body
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f); // white, full alpha body
 	glBindTexture(GL_TEXTURE_2D, gunTex);
 
 	glBegin(GL_QUADS);
 		// bottom left corner
-		glTexCoord2i(0, 0); glVertex3f(-w/2, -h/2, 0);
+		glTexCoord2i(0, 0); glVertex3f(-w/2, -h/2, 0.0f);
 		// bottom right
-		glTexCoord2i(1, 0); glVertex3f( w/2, -h/2, 0);
+		glTexCoord2i(1, 0); glVertex3f( w/2, -h/2, 0.0f);
 		// top right
-		glTexCoord2i(1, 1); glVertex3f( w/2,  h/2, 0);
+		glTexCoord2i(1, 1); glVertex3f( w/2,  h/2, 0.0f);
 		// top left
-		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0);
+		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0.0f);
 	glEnd();
 
 	glPopMatrix();

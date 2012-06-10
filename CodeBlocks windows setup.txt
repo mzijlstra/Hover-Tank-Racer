@@ -1,0 +1,25 @@
+Environment setup under windows:
+
+Download and install Code::Blocks. Make sure to download the windows installer that includes the Mingw32 compiler. 
+
+Download the SDL Mingw32 development libraries. You may need 7zip(freeware) in order to extract .tar.gz file. This would un-gz it first, after which you still have to un-tar it (7zip can do both). 
+
+I placed the SDL development libraries in my code directory, next to my projects.
+
+Open code blocks, and start a new SDL project, giving it the location of the Hover-Tank-Racer code for directory to make the project into. After that a dialog should ask you for the location of the SDL libraries (point the 'base' to where you extracted them).
+
+Code blocks is a bit weird, it will ask you for the location of the SDL libaries, and then when you try to give said location it brings up another dialog box first complaining about the fact that the SDL base has not been set (just set the base to the SDL directory).  Only after having set the base will it actually give you your dialog for the original 'Where is SDL' that you were going to specify.
+
+More weirdness, when giving the normal SDL directory it complains that it can't find SDL.h, give it the include/SDL directory inside SDL base and it should stop complaining.
+
+I was wrong, now it complains about not being able to find the include directory. I'm going to copy SDL.h into the base directory and then try again with giving it the base dir instead if include/SDL.
+
+Hmm... Okay, it seems like it wants SDL.h inside the include directory itself (if you give it the base)...  Perhaps I should just copy everything from inside include/SDL into the include dir.
+
+Download SDL_Image (http://www.libsdl.org/projects/SDL_image/). The source version (zip) and the binary wind32 (non 64 bit) version. Put SDL_Image.h into the include directory of SDL (I put it in both include and include/SDL just to be sure)
+
+From the zip for the SDL_Image binary extract SDL_image.dll and place it inside the lib directory of SDL and -important- rename it to SDL_image.a
+
+Then in code blocks click on Project -> build options and in the linker settings tab link to libopengl32.a (use absolute path) and libglu32.a
+
+Put SDL.dll (from bin directory in sdl base install) into codeblocks\MinGW\Bin  also put SDL_Image.dll (which we also earlier made a .a file from) libpng15-15.dll, zlib1.dll here and we should be good to go

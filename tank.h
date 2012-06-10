@@ -2,6 +2,14 @@
 #ifndef TANK_H_INCLUDED
 #define TANK_H_INCLUDED
 
+#define _USE_MATH_DEFINES
+
+#include <SDL/SDL_platform.h>
+
+#if defined( __WIN32__ )
+	#include <windows.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <GL/gl.h>

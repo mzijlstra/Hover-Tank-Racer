@@ -1,15 +1,19 @@
 #ifndef TEST_H_INCLUDED
 #define TEST_H_INCLUDED
 
+#include <SDL/SDL_platform.h>
+
+#define _USE_MATH_DEFINES
+
 #include <stdio.h>
 #include <math.h>
 
 #include <SDL/SDL.h>
-#include <SDL/SDL_platform.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_opengl.h>
 
 #if defined( __WIN32__ )
+	#include <windows.h>
     #include <direct.h>
 	#define PATH_LEN  _MAX_PATH
 #elif defined( __LINUX__ )

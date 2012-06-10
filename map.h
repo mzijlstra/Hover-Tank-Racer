@@ -1,6 +1,12 @@
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
 
+#include <SDL/SDL_platform.h>
+
+#if defined( __WIN32__ )
+	#include <windows.h>
+#endif
+
 #include <stdio.h>
 #include <GL/gl.h>
 
