@@ -15,6 +15,7 @@
 #include <GL/gl.h>
 
 #include "map.h"
+#include "3dsloader.h"
 
 #define TORAD(X) X*(M_PI/180)
 #define TODEG(X) X*(180/M_PI)
@@ -32,9 +33,9 @@ class Tank {
 		Map* map;
 
 		// textures
-		GLuint baseTex;
-		GLuint engFireTex;
-		GLuint gunTex;
+//		GLuint baseTex;
+//		GLuint engFireTex;
+//		GLuint gunTex;
 
 		// size
 		int w;
@@ -52,9 +53,11 @@ class Tank {
         struct vector rot;
         struct vector vel;
 
+		obj_type object;
+
 	public:
 		// System methods
-		Tank(Map* map, int x, int y, GLuint baseTex, GLuint engFireTex, GLuint gunTex);
+		Tank(Map* map, int x, int y);
 		~Tank();
 		void display();
 		void onUpdate();
@@ -66,6 +69,7 @@ class Tank {
 		// getters
 		float getX();
 		float getY();
+		obj_type_ptr getObject() { return &object; }
 
 	private:
 		float applyDrag(float vel);

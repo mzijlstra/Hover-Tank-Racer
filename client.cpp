@@ -124,6 +124,11 @@ bool Client::onInit() {
 	// Enable depth testing
 	glEnable(GL_DEPTH_TEST);
 
+	
+	glEnable(GL_CULL_FACE); // do not calculate inside of models
+	glFrontFace(GL_CCW); // counter clockwise polys face out (default)
+
+
 	// enable 2d textures
 	glEnable(GL_TEXTURE_2D);
 
@@ -134,6 +139,20 @@ bool Client::onInit() {
 	// GL_MULTISAMPLE Why does the include under windows not find it???
 	//glEnable(0x809D);
 
+	GLfloat ambientLight[] = { 0.50, 0.50, 0.50 };
+	GLfloat diffuseLight[] = { 0.5, 0.5, 0.5 };
+	glEnable(GL_LIGHTING);
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+	glEnable(GL_LIGHT0);
+
+	//glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight); 
+	glEnable ( GL_COLOR_MATERIAL );
+	glColorMaterial ( GL_FRONT, GL_AMBIENT_AND_DIFFUSE );
+
+	glEnable(GL_NORMALIZE);
+
 	// load textures
 	GLuint mapTexture    = 0;
 	GLuint tankBaseTex = 0;
@@ -141,9 +160,9 @@ bool Client::onInit() {
 	GLuint tankGunTex = 0;
 	GLuint cursorTexture = 0;
 	if (   (mapTexture  = loadTexture("./graphics/moon landscape large.png")) < 0
-		|| (tankBaseTex = loadTexture("./graphics/tank3-base.png")) < 0
-        || (tankFireTex = loadTexture("./graphics/tank3-base-engfire.png")) < 0
-        || (tankGunTex = loadTexture("./graphics/tank3-gun.png")) < 0
+//		|| (tankBaseTex = loadTexture("./graphics/tank3-base.png")) < 0
+//		|| (tankFireTex = loadTexture("./graphics/tank3-base-engfire.png")) < 0
+//		|| (tankGunTex = loadTexture("./graphics/tank3-gun.png")) < 0
 		|| (cursorTexture = loadTexture("./graphics/triangle-green.png")) < 0)
 	{
 		printf("problem loading textures\n");
@@ -151,8 +170,10 @@ bool Client::onInit() {
 	}
 
 	map = new Map(4096, 4096, mapTexture);
-	p1 = new Tank(map, 100, 100, tankBaseTex, tankFireTex, tankGunTex);
+	p1 = new Tank(map, 100, 100);
 	cursor = new Cursor(0, 0, 0, cursorTexture);
+
+	Load3DS(p1->getObject(), "saucer.3ds");
 
     return true;
 }
@@ -356,6 +377,9 @@ void Client::onRender() {
 			xView, yView, 0, // looking at this point
 			0, 1, 0); // up vector
 
+	// put light source at eye location
+	GLfloat lightPos[] = {0, 0, 1000 };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
 	map->display();
 	p1->display();

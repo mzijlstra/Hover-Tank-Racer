@@ -4,11 +4,11 @@
 /* System functions */
 
 //---------Constructor----------------------------------------------------------
-Tank::Tank(Map* map, int x, int y, GLuint baseTex, GLuint engFireTex, GLuint gunTex) {
+Tank::Tank(Map* map, int x, int y) {
 	this->map = map;
-	this->baseTex = baseTex;
-	this->engFireTex = engFireTex;
-	this->gunTex = gunTex;
+//	this->baseTex = baseTex;
+//	this->engFireTex = engFireTex;
+//	this->gunTex = gunTex;
 
 	w = h = 32; // 32x32 square
     engFire = false;
@@ -27,9 +27,9 @@ Tank::Tank(Map* map, int x, int y, GLuint baseTex, GLuint engFireTex, GLuint gun
 
 //--------Destructor------------------------------------------------------------
 Tank::~Tank() {
-	glDeleteTextures(1, &baseTex);
-	glDeleteTextures(1, &engFireTex);
-	glDeleteTextures(1, &gunTex);
+//	glDeleteTextures(1, &baseTex);
+//	glDeleteTextures(1, &engFireTex);
+//	glDeleteTextures(1, &gunTex);
 }
 
 //------------------------------------------------------------------------------
@@ -175,8 +175,7 @@ void Tank::display() {
 	glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
 	glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f); // white, full alpha body
-	GLuint texture = engFire ? engFireTex : baseTex;
+/*	GLuint texture = engFire ? engFireTex : baseTex;
 	engFire = false; // reset engFire state to false
 	glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -208,6 +207,51 @@ void Tank::display() {
 		// top left
 		glTexCoord2i(0, 1); glVertex3f(-w/2,  h/2, 0.0f);
 	glEnd();
+*/
+	glColor4f(0.5f, 0.5f, 0.5f, 1.0f); // grey, no alpha body
+
+	int l_index;
+	int temp;
+    glBegin(GL_TRIANGLES); // glBegin and glEnd delimit the vertices that define a primitive (in our case triangles)
+    for (l_index=0;l_index<object.polygons_qty;l_index++)
+    {
+		// TODO add glNormal3f() call based on the 3 vertexes below;
+
+
+        //----------------- FIRST VERTEX -----------------
+        // Texture coordinates of the first vertex
+//        glTexCoord2f( object.mapcoord[ object.polygon[l_index].a ].u,
+//                      object.mapcoord[ object.polygon[l_index].a ].v);
+        // Coordinates of the first vertex
+		temp = object.polygon[l_index].a;
+        glVertex3f( object.vertex[ temp ].x,
+                    object.vertex[ temp ].y,
+                    object.vertex[ temp ].z); //Vertex definition
+
+        //----------------- SECOND VERTEX -----------------
+        // Texture coordinates of the second vertex
+//        glTexCoord2f( object.mapcoord[ object.polygon[l_index].b ].u,
+//                      object.mapcoord[ object.polygon[l_index].b ].v);
+        // Coordinates of the second vertex
+		temp = object.polygon[l_index].b;
+        glVertex3f( object.vertex[ temp ].x,
+                    object.vertex[ temp ].y,
+                    object.vertex[ temp ].z);
+        
+        //----------------- THIRD VERTEX -----------------
+        // Texture coordinates of the third vertex
+//        glTexCoord2f( object.mapcoord[ object.polygon[l_index].c ].u,
+//                      object.mapcoord[ object.polygon[l_index].c ].v);
+        // Coordinates of the Third vertex
+		temp = object.polygon[l_index].c;
+        glVertex3f( object.vertex[ temp ].x,
+                    object.vertex[ temp ].y,
+                    object.vertex[ temp ].z);
+    }
+    glEnd();
+
+   	glFlush(); // This force the execution of OpenGL commands
+
 
 	glPopMatrix();
 }

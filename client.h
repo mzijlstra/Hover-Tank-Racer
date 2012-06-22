@@ -25,6 +25,7 @@
 #include "tank.h"
 #include "map.h"
 #include "cursor.h"
+#include "3dsloader.h"
 
 class Client {
 	private:
